@@ -4,476 +4,377 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SmartList — Умный помощник</title>
+    
+    <!-- Подключение библиотек -->
     <script src="https://cdn.tailwindcss.com"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-	const supabaseUrl = 'https://frawcmyjmkzntakwjiov.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyYXdjbXlqbWt6bnRha3dqaW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4ODEyNDMsImV4cCI6MjA5MzQ1NzI0M30.qcp517sZD4LoyxZQ7J-seuG-HuTNqIkAtYi2RSp8ytA';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-	
-	const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-let currentShareId = new URLSearchParams(window.location.search).get('list');
-
-// Инициализация при загрузке
-document.addEventListener('DOMContentLoaded', async () => {
-    renderQuickButtons();
-    if (currentShareId) {
-        loadListFromCloud(currentShareId);
-    }
-});
-
-// Сохранение в облако
-async function saveToCloud(data) {
-    if (!currentShareId) {
-        currentShareId = 'list_' + Math.random().toString(36).substr(2, 9);
-        window.history.pushState({}, '', '?list=' + currentShareId);
-    }
-
-    const { error } = await supabase
-        .from('shopping_lists')
-        .upsert([{ share_id: currentShareId, items: data }], { onConflict: 'share_id' });
-
-    if (error) console.error('Ошибка сохранения:', error);
-}
-
-// Загрузка из облака
-async function loadListFromCloud(id) {
-    const { data, error } = await supabase
-        .from('shopping_lists')
-        .select('items')
-        .eq('share_id', id)
-        .single();
-
-    if (data) {
-        updateList(data.items, false); // false чтобы не зациклить сохранение
-    }
-}
-
-// Функция обновления списка (дополнена сохранением)
-function updateList(data, shouldSave = true) {
-    const container = document.getElementById('shoppingList');
-    container.innerHTML = '';
-    
-    for (const [category, items] of Object.entries(data)) {
-        const catDiv = document.createElement('div');
-        catDiv.innerHTML = `<div class="category-header">${category}</div>`;
-        
-        items.forEach(item => {
-            const itemRow = document.createElement('div');
-            itemRow.className = 'item-row';
-            itemRow.innerHTML = `
-                <input type="checkbox" class="w-5 h-5" onchange="toggleItem(this)">
-                <span class="item-text ml-3 flex-grow">${item}</span>
-            `;
-            catDiv.appendChild(itemRow);
-        });
-        container.appendChild(catDiv);
-    }
-    
-    if (shouldSave) saveToCloud(data);
-}
-
-// Функция "Поделиться"
-function shareList() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    alert('Ссылка на этот список скопирована! Отправь её родным: ' + url);
-}
-
-	</script>
-	
-	
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
             -webkit-tap-highlight-color: transparent;
         }
 
         .mobile-container {
-            max-width: 450px;
+            max-width: 480px;
             margin: 0 auto;
-            background: white;
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Красивые обводки для кнопок и полей */
+        .glass-border {
+            border: 2px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+        .glass-border:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .category-card {
+            margin: 12px;
+            border: 2px solid #f1f5f9;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
         }
 
         .category-header {
             background: #f8fafc;
-            padding: 8px 16px;
-            font-weight: 600;
-            font-size: 0.85rem;
+            padding: 10px 16px;
+            font-weight: 700;
+            font-size: 0.75rem;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .item-row {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
+            padding: 14px 16px;
             border-bottom: 1px solid #f1f5f9;
-            transition: all 0.2s;
         }
+        .item-row:last-child { border-bottom: none; }
 
-        .item-row.completed {
-            opacity: 0.5;
-        }
-
-        .item-row.completed .item-text {
-            text-decoration: line-through;
-        }
+        .item-row.completed { background-color: #f8fafc; opacity: 0.6; }
+        .item-row.completed .item-text { text-decoration: line-through; color: #94a3b8; }
 
         .quick-btn {
             white-space: nowrap;
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
             transition: all 0.2s;
-            border: 1px solid #e2e8f0;
+        }
+        .quick-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #eff6ff;
         }
 
-        .quick-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Bottom Sheet Style */
         #recipeModal {
-            transition: transform 0.3s ease-out;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             transform: translateY(100%);
-            z-index: 50;
+            z-index: 100;
         }
-
-        #recipeModal.active {
-            transform: translateY(0);
-        }
+        #recipeModal.active { transform: translateY(0); }
 
         .loader {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #3b82f6;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .premium-badge {
-            background: linear-gradient(90deg, #f59e0b, #d97706);
+        .premium-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 12px;
             color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+            border: 2px solid rgba(255,255,255,0.1);
         }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
 <div class="mobile-container">
-    <!-- Header -->
-    <header class="p-4 border-bottom flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+    <!-- Шапка -->
+    <header class="p-5 border-b-2 border-slate-50 flex justify-between items-center bg-white sticky top-0 z-10">
         <div>
-            <h1 class="text-xl font-bold text-slate-800">SmartList</h1>
-            <p class="text-xs text-slate-500">Пробный период: <span class="text-orange-500 font-bold">7 дней</span></p>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">SmartList</h1>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">AI Online</p>
+            </div>
         </div>
-        <button onclick="shareList()" class="text-blue-600 p-2">
-            <i class="fa-solid fa-user-plus text-lg"></i>
+        <button onclick="shareList()" class="w-10 h-10 rounded-xl border-2 border-slate-100 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-all">
+            <i class="fa-solid fa-share-nodes"></i>
         </button>
     </header>
 
-    <!-- Search Area -->
-    <div class="p-4 bg-white">
-        <div class="relative flex items-center gap-2">
-            <div class="relative flex-grow">
+    <!-- Поиск и быстрые кнопки -->
+    <div class="p-4 space-y-4">
+        <div class="flex items-center gap-2">
+            <div class="relative flex-grow glass-border rounded-2xl bg-slate-50">
                 <input type="text" id="mainInput" 
-                    placeholder="Что купить или какой рецепт?" 
-                    class="w-full bg-slate-100 border-none rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400"></i>
+                    placeholder="Что купить?" 
+                    class="w-full bg-transparent border-none py-4 pl-12 pr-4 font-medium outline-none text-slate-700">
+                <i class="fa-solid fa-wand-sparkles absolute left-4 top-4.5 text-blue-500"></i>
             </div>
             <button id="showRecipeBtn" onclick="getRecipe()" 
-                class="hidden bg-green-500 text-white px-4 py-3 rounded-xl font-semibold shadow-md active:bg-green-600 transition-all">
-                Показать
+                class="hidden bg-emerald-500 text-white px-5 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-100 active:scale-95 transition-all">
+                РЕЦЕПТ
             </button>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="mt-4 overflow-x-auto no-scrollbar">
+        <div class="overflow-x-auto no-scrollbar">
             <div id="quickButtons" class="flex gap-2 pb-2">
-                <!-- Buttons injected by JS -->
+                <button onclick="handleQuickAction('Борщ')" class="quick-btn">Борщ</button>
+                <button onclick="handleQuickAction('Плов')" class="quick-btn">Плов</button>
+                <button onclick="handleQuickAction('Шашлык')" class="quick-btn">Шашлык</button>
+                <button onclick="handleQuickAction('Оливье')" class="quick-btn">Оливье</button>
+                <button onclick="handleQuickAction('Завтрак')" class="quick-btn">Завтрак</button>
+                <button onclick="handleQuickAction('Уборка')" class="quick-btn">Уборка</button>
             </div>
         </div>
     </div>
 
-    <!-- Trial Info -->
-    <div id="trialBanner" class="mx-4 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-center justify-between">
-        <span class="text-sm text-blue-800">Premium-версия доступна</span>
-        <button class="premium-badge">АКТИВИРОВАТЬ</button>
+    <!-- Баннер подписки -->
+    <div class="premium-card flex justify-between items-center">
+        <div>
+            <p class="font-bold text-lg">7 дней бесплатно</p>
+            <p class="text-blue-100 text-xs font-medium">Весь ИИ-функционал включен</p>
+        </div>
+        <button class="bg-white text-blue-600 px-4 py-2 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition-all">
+            PRO
+        </button>
     </div>
 
-    <!-- Shopping List -->
-    <div id="shoppingList" class="flex-grow pb-24">
-        <!-- Categories and items will be here -->
-        <div id="emptyState" class="text-center py-20 text-slate-400">
-            <i class="fa-solid fa-basket-shopping text-5xl mb-4 opacity-20"></i>
-            <p>Список пока пуст</p>
-            <p class="text-xs">Нажмите на кнопку или скажите голосом</p>
+    <!-- Список -->
+    <div id="shoppingList" class="flex-grow pb-32">
+        <div id="emptyState" class="text-center py-20 px-10">
+            <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-200">
+                <i class="fa-solid fa-cart-plus text-3xl text-slate-300"></i>
+            </div>
+            <p class="font-bold text-slate-800">Список пока пуст</p>
+            <p class="text-sm text-slate-400 mt-2">Выберите блюдо выше или просто напишите, что нужно купить</p>
         </div>
     </div>
 
-    <!-- Bottom Controls -->
-    <div class="fixed bottom-0 max-w-[450px] w-full bg-white border-t p-4 flex justify-between items-center shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-        <button onclick="clearList()" class="flex flex-col items-center text-slate-400 hover:text-red-500 transition-colors">
-            <i class="fa-solid fa-trash-can text-xl"></i>
-            <span class="text-[10px] mt-1">Очистить</span>
+    <!-- Нижняя навигация -->
+    <div class="fixed bottom-0 max-w-[480px] w-full bg-white/80 backdrop-blur-lg border-t-2 border-slate-50 p-5 flex justify-between items-center shadow-2xl">
+        <button onclick="clearList()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-red-500 transition-colors">
+            <div class="w-12 h-12 rounded-2xl border-2 border-slate-50 flex items-center justify-center">
+                <i class="fa-solid fa-trash-can text-lg"></i>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Сброс</span>
         </button>
         
-        <button onclick="simulateVoice()" class="bg-blue-600 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all -mt-10 border-4 border-white">
-            <i id="micIcon" class="fa-solid fa-microphone text-xl"></i>
+        <button onclick="simulateVoice()" class="bg-blue-600 w-16 h-16 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-blue-200 active:scale-90 transition-all -mt-12 border-4 border-white">
+            <i id="micIcon" class="fa-solid fa-microphone text-2xl"></i>
         </button>
 
-        <button onclick="toggleAddButton()" class="flex flex-col items-center text-slate-400 hover:text-blue-600 transition-colors">
-            <i class="fa-solid fa-circle-plus text-xl"></i>
-            <span class="text-[10px] mt-1">Добавить кнопку</span>
+        <button onclick="addNewQuickBtn()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors">
+            <div class="w-12 h-12 rounded-2xl border-2 border-slate-50 flex items-center justify-center">
+                <i class="fa-solid fa-plus text-lg"></i>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Кнопка</span>
         </button>
     </div>
 
-    <!-- Recipe Modal (Bottom Sheet) -->
-    <div id="recipeModal" class="fixed inset-x-0 bottom-0 max-w-[450px] mx-auto bg-white rounded-t-3xl shadow-2xl h-[80vh] flex flex-col overflow-hidden">
-        <div class="h-1.5 w-12 bg-slate-300 rounded-full mx-auto mt-3 mb-2"></div>
-        <div class="p-6 overflow-y-auto">
-            <div class="flex justify-between items-start mb-4">
-                <h2 id="recipeTitle" class="text-2xl font-bold text-slate-800">Название рецепта</h2>
-                <button onclick="closeRecipe()" class="bg-slate-100 rounded-full p-2 w-8 h-8 flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+    <!-- Экран рецепта -->
+    <div id="recipeModal" class="fixed inset-x-0 bottom-0 max-w-[480px] mx-auto bg-white rounded-t-[40px] shadow-2xl h-[85vh] flex flex-col border-t-4 border-emerald-500">
+        <div class="w-16 h-1.5 bg-slate-200 rounded-full mx-auto mt-4 mb-2"></div>
+        <div class="p-8 overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 id="recipeTitle" class="text-3xl font-black text-slate-800 leading-tight">Рецепт</h2>
+                <button onclick="closeRecipe()" class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 text-xl">✕</button>
             </div>
-            <div id="recipeContent" class="text-slate-600 leading-relaxed space-y-4">
-                <!-- Recipe text will be here -->
-            </div>
+            <div id="recipeContent" class="text-slate-600 text-lg leading-relaxed space-y-6"></div>
         </div>
     </div>
 </div>
 
 <script>
-    let shoppingData = {};
-    let quickButtons = ['Борщ', 'Плов', 'Шашлык', 'Оливье', 'Завтрак', 'Уборка'];
+    // --- ПОДКЛЮЧЕНИЕ БАЗЫ (ВАШИ КЛЮЧИ) ---
+    const supabaseUrl = 'https://frawcmyjmkzntakwjiov.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyYXdjbXlqbWt6bnRha3dqaW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4ODEyNDMsImV4cCI6MjA5MzQ1NzI0M30.qcp517sZD4LoyxZQ7J-seuG-HuTNqIkAtYi2RSp8ytA';
     
-    // Инициализация при загрузке
+    let supabase;
+    try {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    } catch(e) { console.error("Database initialization error"); }
+
+    let currentShareId = new URLSearchParams(window.location.search).get('list');
+
+    // --- ЛОГИКА ---
     document.addEventListener('DOMContentLoaded', () => {
-        renderQuickButtons();
-        loadFromHistory();
+        if (currentShareId && supabase) loadListFromCloud(currentShareId);
         
-        // Следим за вводом для кнопки "Показать"
         document.getElementById('mainInput').addEventListener('input', (e) => {
             const btn = document.getElementById('showRecipeBtn');
-            if (e.target.value.toLowerCase().includes('рецепт')) {
-                btn.classList.remove('hidden');
-            } else {
-                btn.classList.add('hidden');
-            }
+            btn.classList.toggle('hidden', !e.target.value.toLowerCase().includes('рецепт'));
         });
     });
 
-    // Отрисовка кнопок быстрого доступа
-    function renderQuickButtons() {
-        const container = document.getElementById('quickButtons');
-        container.innerHTML = quickButtons.map(name => `
-            <button onclick="handleQuickAction('${name}')" 
-                class="quick-btn px-5 py-2 bg-white rounded-full text-sm font-medium text-slate-700 shadow-sm hover:bg-blue-50 hover:text-blue-600">
-                ${name}
-            </button>
-        `).join('');
+    async function handleQuickAction(topic) {
+        document.getElementById('mainInput').value = (topic === 'Уборка') ? 'Уборка' : `Рецепт: ${topic}`;
+        document.getElementById('mainInput').dispatchEvent(new Event('input'));
+        await getAIResponse(topic);
     }
 
-    // Обработка нажатия на быструю кнопку
-    async function handleQuickAction(name) {
-        const input = document.getElementById('mainInput');
-        const query = name === 'Уборка' ? 'Товары для уборки' : `Рецепт: ${name}`;
-        input.value = query;
-        input.dispatchEvent(new Event('input'));
-
-        await getAIResponse(name);
-    }
-
-    // Запрос к ИИ (Pollinations + DeepSeek)
+    // Улучшенный запрос к ИИ (Метод GET для обхода CORS и ошибок)
     async function getAIResponse(topic) {
-        const listContainer = document.getElementById('shoppingList');
         const emptyState = document.getElementById('emptyState');
+        emptyState.innerHTML = `<div class="flex flex-col items-center py-10"><div class="loader mb-4"></div><p class="font-bold text-blue-600 animate-pulse">Smart AI составляет список...</p></div>`;
         
-        emptyState.innerHTML = `<div class="loader"></div> <p class="mt-2">ИИ подбирает товары...</p>`;
-        
-        const systemPrompt = `Ты — умный помощник для списка покупок. Когда пользователь называет блюдо или событие, возвращай JSON-объект, где ключи — категории магазина (на русском), а значения — массивы товаров. Только JSON. Пример: {"Овощи": ["Картофель", "Лук"], "Мясо": ["Говядина"]}`;
+        // Четкая инструкция для ИИ
+        const prompt = `Составь список покупок для "${topic}". Верни только JSON объект на русском языке: {"Категория": ["Товар1", "Товар2"]}. Без лишнего текста.`;
         
         try {
-            const response = await fetch('https://text.pollinations.ai/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: `Составь список покупок для: ${topic}` }
-                    ],
-                    model: 'deepseek'
-                })
-            });
-
-            const text = await response.text();
-            // Пытаемся извлечь JSON (ИИ иногда добавляет Markdown ```json)
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                const data = JSON.parse(jsonMatch[0]);
-                updateList(data);
-                saveToHistory(topic, data);
-            }
+            // Используем прямой вызов GET к pollinations
+            const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&json=true`);
+            if (!response.ok) throw new Error("Network error");
+            
+            const data = await response.json();
+            updateUI(data);
+            saveToCloud(data);
         } catch (error) {
-            console.error('Ошибка ИИ:', error);
-            alert('Нет связи с ИИ. Попробуйте позже или проверьте интернет.');
-            emptyState.innerHTML = `<p>Ошибка загрузки. Попробуйте еще раз.</p>`;
+            console.error('AI Error:', error);
+            emptyState.innerHTML = `<div class="p-6 bg-red-50 rounded-2xl border-2 border-red-100 text-center">
+                <p class="text-red-600 font-bold">Упс! ИИ занят.</p>
+                <button onclick="handleQuickAction('${topic}')" class="mt-3 text-sm font-bold text-red-500 underline">Попробовать еще раз</button>
+            </div>`;
         }
     }
 
-    // Получение рецепта
-    async function getRecipe() {
-        const dish = document.getElementById('mainInput').value.replace('Рецепт:', '').trim();
-        const modal = document.getElementById('recipeModal');
-        const content = document.getElementById('recipeContent');
-        const title = document.getElementById('recipeTitle');
-
-        title.innerText = dish;
-        content.innerHTML = `<div class="text-center py-10"><div class="loader"></div><p>Ищу лучший рецепт в интернете...</p></div>`;
-        modal.classList.add('active');
-
-        try {
-            const response = await fetch('https://text.pollinations.ai/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [
-                        { role: 'system', content: 'Ты шеф-повар. Напиши подробный рецепт блюда на русском языке до 500 слов. Используй теги <p> и <strong> для оформления.' },
-                        { role: 'user', content: `Напиши рецепт: ${dish}` }
-                    ],
-                    model: 'deepseek'
-                })
-            });
-
-            const recipeText = await response.text();
-            content.innerHTML = recipeText.replace(/\n/g, '<br>');
-        } catch (e) {
-            content.innerHTML = "Не удалось загрузить рецепт. Проверьте интернет.";
-        }
-    }
-
-    // Обновление UI списка
-    function updateList(data) {
+    function updateUI(data) {
         const container = document.getElementById('shoppingList');
         container.innerHTML = '';
         
         for (const [category, items] of Object.entries(data)) {
-            const catDiv = document.createElement('div');
-            catDiv.innerHTML = `<div class="category-header">${category}</div>`;
+            const card = document.createElement('div');
+            card.className = 'category-card';
             
-            items.forEach(item => {
-                const itemRow = document.createElement('div');
-                itemRow.className = 'item-row';
-                itemRow.innerHTML = `
-                    <input type="checkbox" class="w-5 h-5 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500" onchange="toggleItem(this)">
-                    <span class="item-text ml-3 flex-grow text-slate-700">${item}</span>
-                    <button onclick="this.parentElement.remove()" class="text-slate-300 hover:text-red-500 p-1">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                `;
-                catDiv.appendChild(itemRow);
-            });
-            container.appendChild(catDiv);
+            let itemsHtml = items.map(item => `
+                <div class="item-row">
+                    <input type="checkbox" class="w-6 h-6 rounded-lg border-2 border-slate-200 text-blue-600 focus:ring-0" onchange="toggleItem(this)">
+                    <span class="item-text ml-4 flex-grow font-semibold text-slate-700">${item}</span>
+                    <button onclick="removeItem(this)" class="text-slate-300 hover:text-red-400 p-2">✕</button>
+                </div>
+            `).join('');
+
+            card.innerHTML = `<div class="category-header">
+                <i class="fa-solid fa-layer-group text-blue-400"></i> ${category}
+            </div>${itemsHtml}`;
+            
+            container.appendChild(card);
         }
+    }
+
+    async function getRecipe() {
+        const dish = document.getElementById('mainInput').value.replace('Рецепт:', '').trim();
+        const modal = document.getElementById('recipeModal');
+        const content = document.getElementById('recipeContent');
+        
+        document.getElementById('recipeTitle').innerText = dish;
+        content.innerHTML = `<div class="flex flex-col items-center py-20"><div class="loader mb-4"></div><p class="font-bold text-emerald-500">Шеф-повар пишет рецепт...</p></div>`;
+        modal.classList.add('active');
+
+        try {
+            const prompt = `Напиши пошаговый рецепт для блюда: ${dish}. Используй HTML теги <p> и <strong>. Начни сразу с текста.`;
+            const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai`);
+            const text = await response.text();
+            content.innerHTML = text;
+        } catch (e) {
+            content.innerHTML = "Не удалось получить рецепт. Проверьте интернет.";
+        }
+    }
+
+    // --- ОБЛАКО И СИСТЕМНЫЕ ФУНКЦИИ ---
+    async function saveToCloud(data) {
+        if (!supabase) return;
+        if (!currentShareId) {
+            currentShareId = 'list_' + Math.random().toString(36).substr(2, 9);
+            const newUrl = window.location.origin + window.location.pathname + '?list=' + currentShareId;
+            window.history.pushState({}, '', newUrl);
+        }
+        await supabase.from('shopping_lists').upsert([{ share_id: currentShareId, items: data }], { onConflict: 'share_id' });
+    }
+
+    async function loadListFromCloud(id) {
+        const { data } = await supabase.from('shopping_lists').select('items').eq('share_id', id).single();
+        if (data) updateUI(data.items);
     }
 
     function toggleItem(checkbox) {
-        const row = checkbox.parentElement;
-        if (checkbox.checked) {
-            row.classList.add('completed');
-        } else {
-            row.classList.remove('completed');
-        }
+        checkbox.parentElement.classList.toggle('completed', checkbox.checked);
     }
 
-    function closeRecipe() {
-        document.getElementById('recipeModal').classList.remove('active');
+    function removeItem(btn) {
+        const row = btn.parentElement;
+        const card = row.parentElement;
+        row.remove();
+        if (card.querySelectorAll('.item-row').length === 0) card.remove();
     }
 
+    function closeRecipe() { document.getElementById('recipeModal').classList.remove('active'); }
+    
     function clearList() {
-        if(confirm('Очистить весь список?')) {
-            document.getElementById('shoppingList').innerHTML = `
-                <div id="emptyState" class="text-center py-20 text-slate-400">
-                    <i class="fa-solid fa-basket-shopping text-5xl mb-4 opacity-20"></i>
-                    <p>Список пока пуст</p>
-                </div>`;
-            document.getElementById('mainInput').value = '';
-            document.getElementById('showRecipeBtn').classList.add('hidden');
+        if(confirm('Сбросить текущий список?')) {
+            location.href = window.location.pathname;
         }
     }
 
-    // Имитация голосового ввода
     function simulateVoice() {
-        const mic = document.getElementById('micIcon');
-        mic.classList.replace('fa-microphone', 'fa-ellipsis');
-        mic.parentElement.classList.add('animate-pulse');
-        
-        setTimeout(() => {
-            const val = prompt('Скажите что-нибудь (например: "Добавь всё для душа" или "Рецепт плова")');
-            if (val) {
-                document.getElementById('mainInput').value = val;
-                handleQuickAction(val);
-            }
-            mic.classList.replace('fa-ellipsis', 'fa-microphone');
-            mic.parentElement.classList.remove('animate-pulse');
-        }, 800);
+        const val = prompt('Что вы хотите найти? (Например: "Рецепт борща")');
+        if (val) handleQuickAction(val);
+    }
+
+    function addNewQuickBtn() {
+        const name = prompt('Название новой кнопки:');
+        if (name) {
+            const btn = document.createElement('button');
+            btn.className = 'quick-btn';
+            btn.innerText = name;
+            btn.onclick = () => handleQuickAction(name);
+            document.getElementById('quickButtons').appendChild(btn);
+        }
     }
 
     function shareList() {
-        alert('Ссылка для синхронизации скопирована! Отправьте её родственнику. (Имитация 152-ФЗ)');
-    }
-
-    function toggleAddButton() {
-        const name = prompt('Введите название новой кнопки:');
-        if (name) {
-            quickButtons.push(name);
-            renderQuickButtons();
-        }
-    }
-
-    // Работа с историей (localStorage)
-    function saveToHistory(key, data) {
-        const history = JSON.parse(localStorage.getItem('smartlist_history') || '{}');
-        history[key.toLowerCase()] = {
-            data: data,
-            date: new Date().getTime()
-        };
-        localStorage.setItem('smartlist_history', JSON.stringify(history));
-    }
-
-    function loadFromHistory() {
-        // Логика авто-очистки раз в неделю
-        const history = JSON.parse(localStorage.getItem('smartlist_history') || '{}');
-        const now = new Date().getTime();
-        const oneWeek = 7 * 24 * 60 * 60 * 1000;
-
-        for (const key in history) {
-            if (now - history[key].date > oneWeek) {
-                delete history[key];
-            }
-        }
-        localStorage.setItem('smartlist_history', JSON.stringify(history));
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Ссылка на список скопирована! Отправьте её близким.');
+        });
     }
 </script>
 
