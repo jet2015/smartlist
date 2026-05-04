@@ -3,112 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartList Pro</title>
+    <title>SmartList Pro — Умный помощник</title>
     
+    <!-- Стили и шрифты -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
         
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; overflow: hidden; }
-        .app-container { max-width: 450px; margin: 0 auto; background: white; height: 100vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.2); }
-        
-        /* Header */
-        .header { background: #6366f1; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
-        .header-btn { background: rgba(255,255,255,0.2); width: 38px; height: 38px; border-radius: 50%; display: flex; items-center; justify-content: center; cursor: pointer; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1e1b4b; /* Темный фон вокруг "телефона" */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
 
-        /* Search Area */
-        .search-section { padding: 15px; border-bottom: 1px solid #e5e7eb; }
-        .input-wrapper { border: 1px solid #d1d5db; border-radius: 12px; display: flex; align-items: center; padding: 0 12px; background: white; }
-        .action-btn { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        
-        /* Slider */
-        .slider-container { display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px; scrollbar-width: none; background: white; }
-        .slider-container::-webkit-scrollbar { display: none; }
-        .quick-item { background: #f3f4f6; padding: 8px 16px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; }
+        /* Корпус телефона / Контейнер приложения */
+        .app-frame {
+            width: 100%;
+            max-width: 430px;
+            height: 95vh;
+            background: white;
+            border: 8px solid #0f172a; /* Толстая обводка корпуса */
+            border-radius: 45px; /* Закругления по бокам */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
 
-        /* Main Area */
-        .main-content { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; background: white; }
-        .empty-state { margin: auto; text-align: center; color: #4b5563; }
-        .shopping-card { margin: 12px; border: 1px solid #e5e7eb; border-radius: 16px; background: white; overflow: hidden; }
-        .category-header { background: #f9fafb; padding: 10px 15px; font-weight: 700; font-size: 12px; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
-        .item-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f3f4f6; }
-        .item-row.checked { opacity: 0.5; text-decoration: line-through; }
+        /* Синяя шапка из скрина */
+        .app-header {
+            background-color: #6366f1; /* Индиго-синий */
+            padding: 20px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
 
-        /* FABs */
-        .fab-container { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .fab { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; }
+        .header-btns {
+            display: flex;
+            gap: 10px;
+        }
 
-        /* Recipe Modal */
-        #recipeModal { position: absolute; inset: 0; background: white; z-index: 50; display: none; flex-direction: column; }
-        
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #6366f1; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
+        .circle-btn {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .circle-btn:active { transform: scale(0.9); }
+
+        /* Поиск и кнопки */
+        .search-area {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .input-group {
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            background: white;
+            height: 52px;
+        }
+
+        .action-icon-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        /* Горизонтальный слайдер */
+        .slider-box {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 15px;
+            background: white;
+        }
+        .slider-box::-webkit-scrollbar { display: none; }
+
+        .chip {
+            background: #f1f5f9;
+            padding: 10px 18px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Список товаров */
+        .content-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .empty-view {
+            margin-top: 100px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .shopping-card {
+            margin: 15px;
+            border: 2px solid #f1f5f9;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .card-head {
+            background: #f8fafc;
+            padding: 10px 15px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .item-row.done { opacity: 0.5; text-decoration: line-through; }
+
+        /* Плавающие кнопки как на скрине */
+        .fab-group {
+            position: absolute;
+            bottom: 30px;
+            right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .fab {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* Рецепт */
+        #recipeModal {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            height: 85%;
+            border-top-left-radius: 40px;
+            border-top-right-radius: 40px;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+        #recipeModal.active { transform: translateY(0); }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <!-- Header -->
-    <div class="header">
-        <div class="flex items-center gap-2">
-            <i class="fa-solid fa-cart-shopping text-xl"></i>
-            <span class="text-lg font-bold">SmartList Pro</span>
+<div class="app-frame">
+    <!-- Header: Синий фон, три кнопки -->
+    <header class="app-header">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-cart-shopping text-2xl"></i>
+            <span class="text-xl font-extrabold tracking-tight">SmartList Pro</span>
         </div>
-        <div class="flex gap-2">
-            <div onclick="clearList()" class="header-btn"><i class="fa-solid fa-trash-can text-sm"></i></div>
-            <div onclick="shareList()" class="header-btn"><i class="fa-solid fa-user-group text-sm"></i></div>
-            <div class="header-btn"><i class="fa-solid fa-chart-simple text-sm"></i></div>
+        <div class="header-btns">
+            <div onclick="clearAll()" class="circle-btn" title="Очистить"><i class="fa-solid fa-trash-can"></i></div>
+            <div onclick="shareList()" class="circle-btn" title="Поделиться"><i class="fa-solid fa-user-group"></i></div>
+            <div onclick="alert('Статистика')" class="circle-btn" title="Отчет"><i class="fa-solid fa-chart-line"></i></div>
         </div>
-    </div>
+    </header>
 
-    <!-- Search Section -->
-    <div class="search-section space-y-3">
+    <!-- Search Section: 4 элемента в ряд -->
+    <div class="search-area">
         <div class="flex gap-2">
-            <div class="input-wrapper flex-grow">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 mr-2"></i>
-                <input type="text" id="mainInput" placeholder="Товар или «Рецепт: борщ»" class="w-full py-3 outline-none text-sm">
+            <div class="input-group flex-grow">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 mr-3"></i>
+                <input type="text" id="mainInput" placeholder="Товар или «Рецепт: борщ»" class="w-full h-full outline-none text-sm font-medium">
             </div>
-            <div onclick="simulateVoice()" class="action-btn bg-amber-100 text-amber-600"><i class="fa-solid fa-microphone"></i></div>
-            <div onclick="getRecipe()" class="action-btn bg-sky-100 text-sky-600"><i class="fa-solid fa-sparkles"></i></div>
-            <div onclick="manualAdd()" class="action-btn bg-indigo-600 text-white"><i class="fa-solid fa-plus"></i></div>
+            <!-- Желтый микрофон -->
+            <div onclick="simulateVoice()" class="action-icon-btn bg-amber-100 text-amber-500 border-amber-200">
+                <i class="fa-solid fa-microphone"></i>
+            </div>
+            <!-- Светло-синие искры -->
+            <div onclick="getRecipe()" class="action-icon-btn bg-sky-100 text-sky-500 border-sky-200">
+                <i class="fa-solid fa-wand-sparkles"></i>
+            </div>
+            <!-- Синий плюс -->
+            <div onclick="addItemManual()" class="action-icon-btn bg-indigo-600 text-white shadow-lg shadow-indigo-200">
+                <i class="fa-solid fa-plus"></i>
+            </div>
         </div>
     </div>
 
-    <!-- Quick Slider -->
-    <div class="slider-container">
-        <div onclick="quickAction('Торт Наполеон')" class="quick-item"><i class="fa-solid fa-utensils"></i> Торт Наполеон</div>
-        <div onclick="quickAction('Борщ')" class="quick-item"><i class="fa-solid fa-bowl-food"></i> Борщ</div>
-        <div onclick="quickAction('Уборка')" class="quick-item"><i class="fa-solid fa-broom"></i> Уборка</div>
-        <div onclick="quickAction('Завтрак')" class="quick-item"><i class="fa-solid fa-egg"></i> Завтрак</div>
-        <div class="action-btn bg-indigo-500 text-white rounded-full min-w-[44px]"><i class="fa-solid fa-play"></i></div>
+    <!-- Горизонтальный слайдер -->
+    <div class="slider-box">
+        <div onclick="quickAdd('Торт Наполеон')" class="chip"><i class="fa-solid fa-cake-candles"></i> Торт Наполеон</div>
+        <div onclick="quickAdd('Борщ')" class="chip"><i class="fa-solid fa-bowl-food"></i> Борщ</div>
+        <div onclick="quickAdd('Уборка')" class="chip"><i class="fa-solid fa-broom"></i> Уборка</div>
+        <div onclick="quickAdd('Завтрак')" class="chip"><i class="fa-solid fa-egg"></i> Завтрак</div>
+        <div class="circle-btn bg-indigo-500 text-white min-w-[38px]"><i class="fa-solid fa-play text-[12px]"></i></div>
     </div>
 
-    <!-- Main Content -->
-    <div id="mainContent" class="main-content">
-        <div id="emptyState" class="empty-state">
-            <div class="text-6xl mb-4 opacity-20"><i class="fa-solid fa-cart-shopping"></i></div>
-            <div class="text-lg font-bold">Список пуст</div>
-            <div class="text-sm text-slate-400">Введите товар или выберите шаблон</div>
+    <!-- Основной контент -->
+    <div class="content-area">
+        <div id="emptyView" class="empty-view">
+            <img src="https://cdn-icons-png.flaticon.com/512/1162/1162456.png" class="w-24 h-24 mx-auto mb-6 opacity-20 grayscale">
+            <p class="text-lg font-bold text-slate-800">Список пуст</p>
+            <p class="text-sm text-slate-400 mt-2 px-10">Введите товар или выберите шаблон выше</p>
         </div>
-        <div id="listItems"></div>
+        <div id="shoppingList"></div>
     </div>
 
-    <!-- FABs -->
-    <div class="fab-container">
+    <!-- Плавающие кнопки (FAB) -->
+    <div class="fab-group">
         <div class="fab bg-indigo-400" onclick="alert('Настройки')"><i class="fa-solid fa-gear"></i></div>
         <div class="fab bg-indigo-500" onclick="alert('Помощь')"><i class="fa-solid fa-question"></i></div>
     </div>
 
-    <!-- Recipe Modal -->
+    <!-- Модальное окно рецепта -->
     <div id="recipeModal">
-        <div class="p-4 border-b flex justify-between items-center">
-            <h2 id="recipeTitle" class="font-bold text-lg">Рецепт</h2>
-            <div onclick="closeRecipe()" class="cursor-pointer text-xl p-2">✕</div>
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="recipeTitle" class="text-2xl font-black text-slate-900">Рецепт</h2>
+            <div onclick="closeRecipe()" class="cursor-pointer text-2xl p-2">✕</div>
         </div>
-        <div id="recipeContent" class="p-6 overflow-y-auto leading-relaxed text-slate-600"></div>
+        <div id="recipeBody" class="overflow-y-auto pr-2 text-slate-600 leading-relaxed text-lg"></div>
     </div>
 </div>
 
@@ -116,130 +288,130 @@
     // Настройки базы
     const supabaseUrl = 'https://frawcmyjmkzntakwjiov.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyYXdjbXlqbWt6bnRha3dqaW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4ODEyNDMsImV4cCI6MjA5MzQ1NzI0M30.qcp517sZD4LoyxZQ7J-seuG-HuTNqIkAtYi2RSp8ytA';
-    let supabase;
     
+    let supabase;
     try {
         supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    } catch(e) { console.log("DB Error"); }
+    } catch(e) { console.error("Database connection fail"); }
 
-    let currentShareId = new URLSearchParams(window.location.search).get('list');
+    let shareId = new URLSearchParams(window.location.search).get('list');
 
     window.onload = () => {
-        if(currentShareId) loadFromCloud();
+        if(shareId) loadCloud();
     };
 
-    // --- ФУНКЦИИ ИНТЕРФЕЙСА ---
+    // --- ФУНКЦИИ ---
 
-    async function quickAction(name) {
+    async function quickAdd(name) {
         document.getElementById('mainInput').value = `Рецепт: ${name}`;
         await getAIItems(name);
     }
 
-    async function manualAdd() {
-        const val = document.getElementById('mainInput').value;
+    async function addItemManual() {
+        const val = document.getElementById('mainInput').value.trim();
         if(!val) return;
+        
         if(val.toLowerCase().includes('рецепт')) {
-            await getAIItems(val.replace('Рецепт:', ''));
+            await getAIItems(val.replace('Рецепт:', '').trim());
         } else {
-            addSingleItem(val, "Разное");
+            renderSingle(val, "Разное");
         }
         document.getElementById('mainInput').value = '';
     }
 
     async function getAIItems(topic) {
-        const empty = document.getElementById('emptyState');
-        const listDiv = document.getElementById('listItems');
+        const empty = document.getElementById('emptyView');
+        const list = document.getElementById('shoppingList');
         empty.style.display = 'none';
-        listDiv.innerHTML = `<div class="p-10 text-center"><div class="loader"></div><p class="mt-2 text-sm text-indigo-600">ИИ подбирает товары...</p></div>`;
+        list.innerHTML = `<div class="p-10 text-center"><div class="loader mx-auto"></div><p class="mt-4 text-indigo-600 font-bold">ИИ составляет список...</p></div>`;
 
         try {
-            const prompt = `Верни ТОЛЬКО JSON: {"Категория": ["Товар1", "Товар2"]} для темы: ${topic}`;
+            const prompt = `Верни ТОЛЬКО JSON: {"Категория": ["Товар1", "Товар2"]} для: ${topic}`;
             const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&json=true`);
             const data = await res.json();
-            renderUI(data);
-            saveToCloud(data);
+            renderAll(data);
+            saveCloud(data);
         } catch (e) {
             alert("Ошибка ИИ. Проверьте интернет.");
             empty.style.display = 'block';
-            listDiv.innerHTML = '';
+            list.innerHTML = '';
         }
     }
 
-    function renderUI(data) {
-        const listDiv = document.getElementById('listItems');
-        listDiv.innerHTML = '';
-        document.getElementById('emptyState').style.display = 'none';
+    function renderAll(data) {
+        const list = document.getElementById('shoppingList');
+        list.innerHTML = '';
+        document.getElementById('emptyView').style.display = 'none';
 
         for (const [cat, items] of Object.entries(data)) {
             const card = document.createElement('div');
             card.className = 'shopping-card';
-            card.innerHTML = `<div class="category-header">${cat}</div>`;
+            card.innerHTML = `<div class="card-head">${cat}</div>`;
             
             items.forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'item-row';
                 row.innerHTML = `
-                    <input type="checkbox" class="w-5 h-5 rounded border-slate-300" onchange="this.parentElement.classList.toggle('checked')">
-                    <span class="ml-3 flex-grow text-sm font-medium">${item}</span>
-                    <i class="fa-solid fa-trash-can text-slate-300 cursor-pointer p-1" onclick="this.parentElement.remove()"></i>
+                    <input type="checkbox" class="w-6 h-6 rounded border-slate-300" onchange="this.parentElement.classList.toggle('done')">
+                    <span class="ml-4 flex-grow font-semibold text-slate-700">${item}</span>
+                    <i class="fa-solid fa-trash-can text-slate-200 cursor-pointer p-2 hover:text-red-500" onclick="this.parentElement.remove()"></i>
                 `;
                 card.appendChild(row);
             });
-            listDiv.appendChild(card);
+            list.appendChild(card);
         }
+    }
+
+    function renderSingle(name, cat) {
+        document.getElementById('emptyView').style.display = 'none';
+        const list = document.getElementById('shoppingList');
+        const card = document.createElement('div');
+        card.className = 'shopping-card';
+        card.innerHTML = `<div class="card-head">${cat}</div>
+            <div class="item-row">
+                <input type="checkbox" class="w-6 h-6 rounded border-slate-300" onchange="this.parentElement.classList.toggle('done')">
+                <span class="ml-4 flex-grow font-semibold text-slate-700">${name}</span>
+                <i class="fa-solid fa-trash-can text-slate-200 cursor-pointer p-2" onclick="this.parentElement.parentElement.remove()"></i>
+            </div>`;
+        list.appendChild(card);
     }
 
     async function getRecipe() {
-        const val = document.getElementById('mainInput').value;
-        const dish = val.replace('Рецепт:', '').trim();
-        if(!dish) return alert("Введите название блюда");
+        const dish = document.getElementById('mainInput').value.replace('Рецепт:', '').trim();
+        if(!dish) return alert("Сначала введите название блюда");
 
         const modal = document.getElementById('recipeModal');
-        const content = document.getElementById('recipeContent');
+        const body = document.getElementById('recipeBody');
         document.getElementById('recipeTitle').innerText = dish;
-        content.innerHTML = `<div class="text-center py-10"><div class="loader"></div><p>Шеф-повар пишет рецепт...</p></div>`;
-        modal.style.display = 'flex';
+        body.innerHTML = `<div class="py-10 text-center"><div class="loader mx-auto"></div><p class="mt-4">Шеф-повар пишет рецепт...</p></div>`;
+        modal.classList.add('active');
 
         try {
-            const res = await fetch(`https://text.pollinations.ai/Напиши подробный рецепт ${dish} на русском. Используй <p> и <strong>?model=openai`);
-            content.innerHTML = await res.text();
-        } catch (e) { content.innerHTML = "Ошибка загрузки рецепта."; }
+            const res = await fetch(`https://text.pollinations.ai/Напиши пошаговый рецепт ${dish} на русском. Используй <strong> для заголовков?model=openai`);
+            body.innerHTML = await res.text();
+        } catch (e) { body.innerHTML = "Ошибка получения рецепта."; }
     }
 
-    // --- СИСТЕМНЫЕ ФУНКЦИИ ---
+    // --- СИСТЕМА ---
 
-    function addSingleItem(name, cat) {
-        const listDiv = document.getElementById('listItems');
-        document.getElementById('emptyState').style.display = 'none';
-        const card = document.createElement('div');
-        card.className = 'shopping-card';
-        card.innerHTML = `<div class="category-header">${cat}</div>
-            <div class="item-row">
-                <input type="checkbox" class="w-5 h-5 rounded border-slate-300" onchange="this.parentElement.classList.toggle('checked')">
-                <span class="ml-3 flex-grow text-sm font-medium">${name}</span>
-                <i class="fa-solid fa-trash-can text-slate-300 cursor-pointer" onclick="this.parentElement.parentElement.remove()"></i>
-            </div>`;
-        listDiv.appendChild(card);
-    }
-
-    async function saveToCloud(data) {
+    async function saveCloud(data) {
         if(!supabase) return;
-        if(!currentShareId) {
-            currentShareId = 'list_' + Math.random().toString(36).substr(2, 9);
-            window.history.pushState({}, '', '?list=' + currentShareId);
+        if(!shareId) {
+            shareId = 'list_' + Math.random().toString(36).substr(2, 9);
+            window.history.pushState({}, '', '?list=' + shareId);
         }
-        await supabase.from('shopping_lists').upsert([{ share_id: currentShareId, items: data }], { onConflict: 'share_id' });
+        await supabase.from('shopping_lists').upsert([{ share_id: shareId, items: data }], { onConflict: 'share_id' });
     }
 
-    async function loadFromCloud() {
-        const { data } = await supabase.from('shopping_lists').select('items').eq('share_id', currentShareId).single();
-        if(data) renderUI(data.items);
+    async function loadCloud() {
+        const { data } = await supabase.from('shopping_lists').select('items').eq('share_id', shareId).single();
+        if(data) renderAll(data.items);
     }
 
-    function clearList() { if(confirm('Очистить список?')) location.href = window.location.pathname; }
-    function closeRecipe() { document.getElementById('recipeModal').style.display = 'none'; }
-    function simulateVoice() { const v = prompt('Ваш запрос:'); if(v) { document.getElementById('mainInput').value = v; manualAdd(); } }
-    function shareList() { navigator.clipboard.writeText(window.location.href); alert('Ссылка скопирована!'); }
+    function clearAll() { if(confirm('Сбросить весь список?')) location.href = window.location.pathname; }
+    function closeRecipe() { document.getElementById('recipeModal').classList.remove('active'); }
+    function simulateVoice() { const v = prompt('Запрос:'); if(v) { document.getElementById('mainInput').value = v; addItemManual(); } }
+    function shareList() { navigator.clipboard.writeText(window.location.href); alert('Ссылка для семьи скопирована!'); }
 </script>
 
 </body>
